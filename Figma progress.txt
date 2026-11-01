@@ -2,4 +2,3 @@ https://www.figma.com/design/sQdC7qiUkw4weWMmsTgIjT/Untitled?node-id=0-1&t=1wdj1
 
 Selesai:
 - 1.1.1.1 - Mendesain tampilan katalog dan varian produk
-- 1.1.2.1 - Mendesain formulir pemesanan
