@@ -4,4 +4,3 @@ Selesai:
 - 1.1.1.1 - Mendesain tampilan katalog dan varian produk
 - 1.1.2.1 - Mendesain formulir pemesanan
 - 1.2.1.1 - Mendesain daftar dan detail pesanan
-- 1.2.3.1 - Mendesain pencatatan pesanan saat ini dan kapasitas maksimum
