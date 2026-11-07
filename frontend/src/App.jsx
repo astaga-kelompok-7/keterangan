@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from 'react'
 import './App.css'
 import products from './data/products'
@@ -80,23 +81,47 @@ function ProductCard({ product, onAdd, onOpen, preview = false }) {
   return (
     <article className="product-card">
       <button
+        type="button"
         className={`product-image ${preview ? 'static' : ''}`}
-        onClick={() => onOpen && onOpen(product.id)}
+        onClick={() => !preview && onOpen && onOpen(product.id)}
         disabled={preview}
+        aria-label={`Lihat detail ${product.name}`}
       >
-        <img src={product.image} alt={product.name} />
+        <img src={product.image} alt={product.name} loading="lazy" />
         {product.badge && <span className="product-badge">{product.badge}</span>}
       </button>
       <div className="product-content">
         <span className="eyebrow">{product.category}</span>
         <h3>{product.name}</h3>
-        <p>{product.description}</p>
+        <p className="product-description">{product.description}</p>
         <div className="product-footer">
-          <strong>{formatCurrency(product.price)}</strong>
-          {onAdd && (
-            <button className="small-button" onClick={() => onAdd(product)}>
-              + Keranjang
-            </button>
+          <div className="product-price-wrap">
+            <span className="price-caption">Harga</span>
+            <strong className="product-price">{formatCurrency(product.price)}</strong>
+          </div>
+          {!preview && (
+            <div className="product-card-actions">
+              {onOpen && (
+                <button
+                  type="button"
+                  className="outline-button-sm"
+                  onClick={() => onOpen(product.id)}
+                  aria-label={`Lihat detail ${product.name}`}
+                >
+                  Detail
+                </button>
+              )}
+              {onAdd && (
+                <button
+                  type="button"
+                  className="small-button"
+                  onClick={() => onAdd(product)}
+                  aria-label={`Tambah ${product.name} ke keranjang`}
+                >
+                  + Keranjang
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -186,39 +211,60 @@ function CatalogPage({ onAdd, onOpen }) {
   const visibleProducts = useMemo(
     () => products.filter((product) => {
       const matchesCategory = category === 'Semua' || product.category === category
-      const matchesQuery = product.name.toLowerCase().includes(query.toLowerCase())
+      const matchesQuery = product.name.toLowerCase().includes(query.trim().toLowerCase())
       return matchesCategory && matchesQuery
     }),
     [category, query],
   )
+
+  const handleResetFilters = () => {
+    setCategory('Semua')
+    setQuery('')
+  }
 
   return (
     <section className="content-section page-section">
       <SectionHeading
         eyebrow="Katalog produk"
         title="Semua varian tahu"
-        description="Temukan produk favorit untuk kebutuhanmu."
+        description="Temukan produk tahu crispy favoritmu dengan bahan pilihan dan selalu segar."
         action={<span className="count-badge">{visibleProducts.length} Produk</span>}
       />
       <div className="catalog-tools">
-        <div className="chips">
+        <div className="chips" role="tablist" aria-label="Filter kategori">
           {categories.map((item) => (
             <button
               className={category === item ? 'chip active' : 'chip'}
               key={item}
               onClick={() => setCategory(item)}
+              role="tab"
+              aria-selected={category === item}
+              type="button"
             >
               {item}
             </button>
           ))}
         </div>
-        <input
-          className="search-input"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="⌕  Cari produk..."
-          aria-label="Cari produk"
-        />
+        <div className="search-wrap">
+          <input
+            className="search-input"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="⌕  Cari produk..."
+            aria-label="Cari produk"
+          />
+          {query && (
+            <button
+              type="button"
+              className="search-clear-button"
+              onClick={() => setQuery('')}
+              aria-label="Hapus kata kunci pencarian"
+              title="Hapus pencarian"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
       {visibleProducts.length ? (
         <div className="product-grid">
@@ -227,7 +273,15 @@ function CatalogPage({ onAdd, onOpen }) {
           ))}
         </div>
       ) : (
-        <EmptyState title="Produk tidak ditemukan" description="Coba gunakan kata kunci lain." />
+        <EmptyState
+          title="Produk tidak ditemukan"
+          description={`Tidak ada produk yang cocok dengan "${query}"${category !== 'Semua' ? ` pada kategori ${category}` : ''}.`}
+          action={
+            <button className="primary-button" type="button" onClick={handleResetFilters}>
+              Tampilkan Semua Produk
+            </button>
+          }
+        />
       )}
     </section>
   )
@@ -244,15 +298,18 @@ function ProductDetail({ product, onAdd, onNavigate }) {
 
   return (
     <section className="content-section page-section">
-      <button className="back-button" onClick={() => onNavigate('catalog')}>← Kembali</button>
+      <button className="back-button" onClick={() => onNavigate('catalog')}>← Kembali ke Katalog</button>
       <div className="detail-layout">
-        <img className="detail-image" src={product.image} alt={product.name} />
+        <div className="detail-image-wrap">
+          <img className="detail-image" src={product.image} alt={product.name} />
+          {product.badge && <span className="product-badge detail-badge">{product.badge}</span>}
+        </div>
         <div className="detail-copy">
           <span className="eyebrow">{product.category}</span>
           <h2>{product.name}</h2>
           <strong className="detail-price">{formatCurrency(product.price)}</strong>
           <p>{product.description} Dibuat setiap hari dengan bahan pilihan dan proses yang higienis.</p>
-          <Field label="Deskripsi produk"><textarea readOnly value="Tahu kruk dengan bumbu balado bercita rasa gurih dan renyah." /></Field>
+          <Field label="Deskripsi produk"><textarea readOnly value={product.description} /></Field>
           <Field label="Estimasi pembuatan"><input readOnly value="1 - 2 hari" /></Field>
           <div className="quantity-line">
             <span>Jumlah pesanan</span>
