@@ -3,7 +3,7 @@ require 'koneksi.php';
 require 'fungsi.php';
 wajib_login();
 
-$produk = mysqli_query($conn, "SELECT * FROM produk WHERE aktif = 1 ORDER BY id DESC");
+$produk = mysqli_query($conn, "SELECT * FROM produk WHERE aktif = 1 AND stok > 0 ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="id">
