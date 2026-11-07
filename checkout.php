@@ -1,120 +1,18 @@
 <?php
-require 'koneksi.php';
-require 'fungsi.php';
-wajib_login();
-
-$keranjang = $_SESSION['keranjang'] ?? [];
-
-if (empty($keranjang)) {
-    echo '<h1>Checkout Pesanan</h1>';
-    echo '<p>Keranjang kamu masih kosong.</p>';
-    echo '<a href="produk.php">Pilih Produk</a>';
-    exit;
-}
-
-$items = [];
-$total = 0;
-
-foreach ($keranjang as $id => $jumlah) {
-    $id = (int)$id;
-    $jumlah = (int)$jumlah;
-
-    $stmt = mysqli_prepare(
-        $conn,
-        "SELECT id, nama_produk, harga, stok
-         FROM produk
-         WHERE id = ? AND aktif = 1"
-    );
-
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $p = mysqli_fetch_assoc($result);
-
-    if (!$p || $jumlah < 1 || $jumlah > (int)$p['stok']) {
-        continue;
-    }
-
-    $p['jumlah_pilih'] = $jumlah;
-    $p['subtotal'] = $p['harga'] * $jumlah;
-    $total += $p['subtotal'];
-    $items[] = $p;
-}
-
-if (empty($items)) {
-    echo '<h1>Checkout Pesanan</h1>';
-    echo '<p>Produk tidak ditemukan atau stok tidak mencukupi.</p>';
-    echo '<a href="keranjang.php">Kembali ke Keranjang</a>';
-    exit;
-}
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Checkout - Tahu Kriuk</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header>
-    <a class="logo" href="dashboard.php">🥡 Tahu Kriuk</a>
-    <nav>
-        <a href="dashboard.php">Beranda</a>
-        <a href="produk.php">Produk</a>
-        <a href="keranjang.php">Keranjang</a>
-    </nav>
-</header>
-
-<main class="container">
-    <h1>Checkout Pesanan</h1>
-
-    <?php if (empty($items)): ?>
-        <p>Keranjang kamu masih kosong.</p>
-        <a class="button" href="produk.php">Pilih Produk</a>
-    <?php else: ?>
-
-        <h3>Ringkasan Pesanan</h3>
-
-        <?php foreach ($items as $item): ?>
-            <p>
-                <?= h($item['nama_produk']) ?> ×
-                <?= (int)$item['jumlah_pilih'] ?> —
-                <?= rupiah($item['subtotal']) ?>
-            </p>
-        <?php endforeach; ?>
-
-        <h3>Total: <?= rupiah($total) ?></h3>
-
-        <form action="proses_pesanan.php" method="POST">
-            <label for="jenis">Jenis Pesanan</label>
-            <select id="jenis" name="jenis" required>
-                <option value="">-- Pilih jenis pesanan --</option>
-                <option value="Reguler">Reguler</option>
-                <option value="Preorder">Preorder</option>
-            </select>
-
-
-            <label>Alamat</label>
-            <textarea name="alamat" required></textarea>
-
-            <label for="metode_pembayaran">Metode Pembayaran</label>
-            <select id="metode_pembayaran" name="metode_pembayaran" required>
-                <option value="">-- Pilih metode pembayaran --</option>
-                <option value="COD">COD</option>
-                <option value="Transfer">Transfer Bank</option>
-                <option value="QRIS">QRIS</option>
-            </select>
- 
-            <label>Catatan Pesanan</label>
-            <textarea name="catatan"></textarea>
-
-            <button type="submit">Buat Pesanan dan Lanjut Pembayaran</button>
-        </form>
-
-    <?php endif; ?>
-</main>
-
-</body>
-</html>
+require_once __DIR__.'/functions.php';
+$items=get_cart_items(); if(!$items){header('Location: cart.php');exit;}
+$address=$_SESSION['shipping_address']??null;
+$sub=subtotal($items); $ship=$address ? shipping_for($address) : SHIPPING_BANGKALAN_OTHER;
+?><!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkout</title><link rel="stylesheet" href="assets/css/style.css"></head><body>
+<header class="topbar"><a class="brand" href="index.php">🛍 Toko Tahu Krispy</a><span>Checkout</span></header><main class="container narrow">
+<?php if(isset($_GET['error'])): ?><div class="alert"><?=e($_GET['error'])?></div><?php endif; ?>
+<form method="post" action="place_order.php" id="orderForm">
+<section class="panel"><div class="panel-title">📍 Alamat Pengiriman <a href="address.php">Ubah</a></div>
+<?php if($address): ?><b><?=e($address['recipient'])?> · <?=e($address['phone'])?></b><p><?=e($address['full_address'])?></p><small class="muted"><?=e($address['village']??'')?>, <?=e($address['subdistrict']??'')?>, Kabupaten Bangkalan</small>
+<input type="hidden" name="lat" value="<?=e($address['lat'])?>"><input type="hidden" name="lon" value="<?=e($address['lon'])?>"><input type="hidden" name="full_address" value="<?=e($address['full_address'])?>"><input type="hidden" name="village" value="<?=e($address['village']??'')?>"><input type="hidden" name="subdistrict" value="<?=e($address['subdistrict']??'')?>"><input type="hidden" name="shipping_cost" value="<?=$ship?>">
+<?php else: ?><p class="muted">Tambahkan alamat pengiriman terlebih dahulu.</p><a class="btn" href="address.php">Pilih Alamat</a><?php endif; ?></section>
+<section class="panel"><div class="panel-title">🏪 Toko Tahu Krispy Bangkalan</div><?php foreach($items as $p): ?><div class="checkout-product"><div class="product-photo small"><?=e($p['emoji'])?></div><div class="grow"><b><?=e($p['name'])?></b><div class="muted">Produk pilihan</div><strong class="price"><?=rupiah($p['price'])?></strong></div><span>x <?=$p['qty']?></span><b><?=rupiah($p['line_total'])?></b></div><?php endforeach; ?>
+<label class="field-label">Pesan untuk Penjual (opsional)</label><textarea name="note" rows="2" placeholder="Tinggalkan pesan..."></textarea></section>
+<section class="panel"><div class="panel-title">🚚 Opsi Pengiriman</div><div class="between"><span>Pengiriman reguler</span><b class="price"><?=rupiah($ship)?></b></div><p class="success-text">✓ <?=($ship===0?'Gratis ongkir untuk area Telang':'Tarif pengiriman wilayah Bangkalan')?></p></section>
+<section class="panel"><div class="panel-title">🧾 Rincian Pembayaran</div><div class="between"><span>Subtotal Produk</span><span><?=rupiah($sub)?></span></div><div class="between"><span>Ongkos Kirim</span><span><?=rupiah($ship)?></span></div><hr><div class="between total"><b>Total Pembayaran</b><strong class="price"><?=rupiah($sub+$ship)?></strong></div></section>
+<div class="sticky-order"><div><small>Total Pembayaran</small><strong class="price"><?=rupiah($sub+$ship)?></strong></div><button class="btn" <?=!$address?'disabled':''?>>Buat Pesanan</button></div></form></main></body></html>
