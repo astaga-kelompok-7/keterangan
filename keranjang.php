@@ -16,11 +16,19 @@ if (isset($_POST['tambah'])) {
     mysqli_stmt_execute($stmt);
     $p = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
-    if ($p && $jumlah > 0 && $jumlah <= (int)$p['stok']) {
+    if (!$p) {
+        $_SESSION['pesan'] = "Produk tidak tersedia.";
+    } elseif ($jumlah <= 0) {
+        $_SESSION['pesan'] = "Jumlah pembelian tidak valid.";
+    } else {
+        $stok = (int)$p['stok'];
         $baru = ($_SESSION['keranjang'][$id] ?? 0) + $jumlah;
 
-        if ($baru <= (int)$p['stok']) {
+        if ($baru <= $stok) {
             $_SESSION['keranjang'][$id] = $baru;
+            $_SESSION['pesan'] = "Produk berhasil ditambahkan ke keranjang.";
+        } else {
+            $_SESSION['pesan'] = "Stok tidak mencukupi! Stok tersedia hanya " . $stok . ".";
         }
     }
 
@@ -70,6 +78,12 @@ foreach ($_SESSION['keranjang'] as $id => $jumlah) {
 
 <main class="container">
     <h1>Keranjang Belanja</h1>
+    <?php if (isset($_SESSION['pesan'])): ?>
+    <p class="success">
+        <?= h($_SESSION['pesan']) ?>
+    </p>
+    <?php unset($_SESSION['pesan']); ?>
+    <?php endif; ?>
 
     <?php if (!$items): ?>
         <p>Keranjangmu masih kosong.</p>

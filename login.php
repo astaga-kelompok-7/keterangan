@@ -13,37 +13,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
 
-    $stmt = mysqli_prepare(
-        $conn,
-        "SELECT id, nama, email, password, role
-         FROM users
-         WHERE email = ?"
-    );
-
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-
-    $result = mysqli_stmt_get_result($stmt);
-    $user = mysqli_fetch_assoc($result);
-
-    if ($user && password_verify($password, $user['password'])) {
-        session_regenerate_id(true);
-
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['nama'] = $user['nama'];
-        $_SESSION['email'] = $user['email'];
-        $_SESSION['role'] = $user['role'];
-
-       
-        if ($user['role'] === 'admin') {
-            header("Location: /tahu_kriuk/admin.php");
-        } else {
-            header("Location: /tahu_kriuk/dashboard.php");
-        }
-        exit;
-
+    if ($email === '' || $password === '') {
+        $error = 'Email dan password wajib diisi.';
     } else {
-        $error = 'Email atau password salah.';
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT id, nama, email, password, role
+             FROM users
+             WHERE email = ?
+             LIMIT 1"
+        );
+
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+
+        $result = mysqli_stmt_get_result($stmt);
+        $user = mysqli_fetch_assoc($result);
+
+        if (
+            $user &&
+            password_verify($password, $user['password']) &&
+            in_array($user['role'], ['admin', 'pelanggan'], true)
+        ) {
+            session_regenerate_id(true);
+
+            $_SESSION['user_id'] = (int)$user['id'];
+            $_SESSION['nama'] = $user['nama'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
+
+            if ($user['role'] === 'admin') {
+                header("Location: admin.php");
+                exit;
+            }
+
+            if ($user['role'] === 'pelanggan') {
+                header("Location: dashboard.php");
+                exit;
+            }
+        } else {
+            $error = 'Email atau password salah.';
+        }
     }
 }
 ?>
@@ -60,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="auth-card">
     <h1>🥡 Tahu Kriuk</h1>
     <h2>Masuk ke Akun</h2>
+    <p>Silakan login sebagai admin atau pembeli.</p>
 
     <?php if ($pesan !== ''): ?>
         <p class="success">
@@ -74,11 +85,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form action="login.php" method="POST">
-        <label>Email</label>
-        <input type="email" name="email" required>
+        <label for="email">Email</label>
+        <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Masukkan email"
+            required
+        >
 
-        <label>Password</label>
-        <input type="password" name="password" required>
+        <label for="password">Password</label>
+        <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Masukkan password"
+            required
+        >
 
         <button type="submit">Masuk</button>
     </form>
