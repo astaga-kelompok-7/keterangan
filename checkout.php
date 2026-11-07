@@ -1,4 +1,4 @@
-<?php
+<?php 
 require_once __DIR__.'/functions.php';
 $items=get_cart_items(); if(!$items){header('Location: cart.php');exit;}
 $address=$_SESSION['shipping_address']??null;
