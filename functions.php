@@ -26,14 +26,46 @@ function get_cart_items(): array {
 function subtotal(array $items): int {
     return array_sum(array_map(fn($p) => (int)$p['line_total'], $items));
 }
-function shipping_for(array $address): int {
-    $village = strtolower((string)($address['village'] ?? ''));
-    $suburb = strtolower((string)($address['suburb'] ?? ''));
-    $hamlet = strtolower((string)($address['hamlet'] ?? ''));
-    $display = strtolower((string)($address['display_name'] ?? ''));
-    $all = "$village $suburb $hamlet $display";
-    if (str_contains($all, 'telang')) return SHIPPING_TELANG;
-    return SHIPPING_BANGKALAN_OTHER;
+function service_regions(bool $activeOnly = false): array {
+    $sql = 'SELECT id, name, area, city, shipping_type, shipping_cost, is_active, notes
+            FROM service_regions';
+    if ($activeOnly) $sql .= ' WHERE is_active = 1';
+    $sql .= ' ORDER BY name ASC, id ASC';
+    return db()->query($sql)->fetchAll();
+}
+function shipping_quote(array $address): ?array {
+    $values = [
+        $address['village'] ?? '',
+        $address['suburb'] ?? '',
+        $address['hamlet'] ?? '',
+        $address['display_name'] ?? '',
+        $address['subdistrict'] ?? '',
+        $address['state_district'] ?? '',
+        $address['county'] ?? '',
+        $address['city'] ?? '',
+    ];
+    $searchText = strtolower(implode(' ', array_filter(array_map('strval', $values))));
+    $best = null;
+    $bestScore = 0;
+    foreach (service_regions(true) as $region) {
+        $name = strtolower(trim((string)$region['name']));
+        $area = strtolower(trim((string)$region['area']));
+        $city = strtolower(trim((string)$region['city']));
+        $score = 0;
+        if ($name !== '' && str_contains($searchText, $name)) $score = 3;
+        elseif ($area !== '' && str_contains($searchText, $area)) $score = 2;
+        elseif ($city !== '' && str_contains($searchText, $city)) $score = 1;
+        if ($score > $bestScore) {
+            $best = $region;
+            $bestScore = $score;
+        }
+    }
+    if (!$best) return null;
+    if ($best['shipping_type'] === 'paid' && (int)$best['shipping_cost'] <= 0) return null;
+    return [
+        'region' => $best,
+        'cost' => $best['shipping_type'] === 'free' ? 0 : max(0, (int)$best['shipping_cost']),
+    ];
 }
 function bangkalan_address(array $a): bool {
     $county = strtolower((string)($a['county'] ?? ''));

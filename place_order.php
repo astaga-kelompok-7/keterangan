@@ -4,7 +4,9 @@ $items=get_cart_items(); $a=$_SESSION['shipping_address']??null;
 if(!$items||!$a){header('Location: checkout.php?error=Keranjang atau alamat belum lengkap');exit;}
 $geo=reverse_order_check((float)$a['lat'],(float)$a['lon']);
 if(!$geo || !bangkalan_address($geo)){header('Location: address.php?error=Lokasi tidak valid');exit;}
-$ship=shipping_for($geo); $sub=subtotal($items); $total=$sub+$ship;
+$quote=shipping_quote(array_merge($a,$geo));
+if(!$quote){header('Location: checkout.php?error=Pengiriman ke wilayah ini belum tersedia');exit;}
+$ship=(int)$quote['cost']; $sub=subtotal($items); $total=$sub+$ship;
 try {
  db()->beginTransaction();
  $st=db()->prepare("INSERT INTO orders(order_code,recipient,phone,address_detail,full_address,latitude,longitude,village,subdistrict,note,subtotal,shipping_cost,total_amount,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'Menunggu diproses',NOW())");

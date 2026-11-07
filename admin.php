@@ -47,6 +47,7 @@ $data = mysqli_query($conn, $sql);
     <nav>
         <a href="admin.php">Pesanan</a>
         <a href="admin_produk.php">Kelola Produk</a>
+        <a href="admin_wilayah.php">Wilayah & Tarif</a>
         <a href="produk.php">Lihat Produk</a>
         <a href="logout.php">Logout</a>
     </nav>
