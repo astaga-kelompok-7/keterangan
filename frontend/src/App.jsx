@@ -2,15 +2,24 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 import products from './data/products'
+import {
+  initialPreorderSettings,
+  getPreorderStatus,
+  formatDateTimeIndo,
+  loadPreorderSettings,
+  savePreorderSettings,
+} from './data/preorderConfig'
 
 const customerNavigation = [
   ['Beranda', 'home'],
   ['Produk', 'catalog'],
+  ['Pre-order', 'preorder'],
 ]
 
 const adminNavigation = [
   ['Dashboard', 'admin-dashboard'],
   ['Varian', 'admin-variants'],
+  ['Jadwal Pre-order', 'admin-preorder'],
   ['Cetak Laporan', 'admin-report'],
 ]
 
@@ -129,13 +138,19 @@ function ProductCard({ product, onAdd, onOpen, preview = false }) {
   )
 }
 
-function HomePage({ onNavigate, onAdd, onOpen }) {
+function HomePage({ onNavigate, onAdd, onOpen, preorderSettings, preorderStatus }) {
   const benefits = [
     ['◌', 'Bahan alami', 'Dibuat dari bahan pilihan'],
     ['✚', 'Higienis', 'Diproses dengan standar kebersihan tinggi'],
     ['⌁', 'Harga murah', 'Tahu kruk yang terjangkau'],
     ['☆', 'Rasa unik', 'Rasa yang berbeda dan selalu baru'],
   ]
+
+  const statusClass = preorderStatus?.status === 'Dibuka'
+    ? 'status-open'
+    : preorderStatus?.status === 'Belum Dibuka'
+      ? 'status-upcoming'
+      : 'status-closed'
 
   return (
     <>
@@ -174,6 +189,32 @@ function HomePage({ onNavigate, onAdd, onOpen }) {
           </div>
         ))}
       </section>
+
+      {preorderSettings && preorderStatus && (
+        <section className="preorder-home-banner-wrapper">
+          <div className="preorder-home-banner">
+            <div className="banner-badge-row">
+              <span className="eyebrow">INFO JADWAL & KUOTA PRE-ORDER</span>
+              <span className={`status-pill ${statusClass}`}>
+                ● {preorderStatus.status}
+              </span>
+            </div>
+            <h3>Pemesanan Khusus Pre-order Tahu Kriuk</h3>
+            <p>
+              Periode: <strong>{formatDateTimeIndo(preorderSettings.startDate, preorderSettings.startTime)}</strong> s/d <strong>{formatDateTimeIndo(preorderSettings.endDate, preorderSettings.endTime)}</strong>.
+              {' '}
+              {preorderStatus.isOpen
+                ? `Tersedia sisa kuota ${preorderStatus.remainingQuota} dari batas maksimal ${preorderStatus.maxQuota} pesanan.`
+                : `(${preorderStatus.reason})`}
+            </p>
+            <div className="banner-action-row">
+              <button className="small-button" onClick={() => onNavigate('preorder')}>
+                Lihat Jadwal & Kuota Pre-order →
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="content-section">
         <SectionHeading
@@ -365,20 +406,176 @@ function CartPage({ cart, onUpdate, onRemove, onNavigate }) {
   )
 }
 
-function CheckoutPage({ cart, onNavigate }) {
+function PreorderPage({ onNavigate, preorderSettings, preorderStatus }) {
+  const statusClass = preorderStatus?.status === 'Dibuka'
+    ? 'status-open'
+    : preorderStatus?.status === 'Belum Dibuka'
+      ? 'status-upcoming'
+      : 'status-closed'
+
+  return (
+    <section className="content-section page-section">
+      <SectionHeading
+        eyebrow="LAYANAN PRE-ORDER"
+        title="Jadwal & Kuota Pre-order Tahu Kriuk"
+        description="Pesan tahu crispy lebih awal untuk acara spesial keluarga dengan kuota terjamin dan diproduksi segar."
+        action={
+          <span className={`status-badge-lg ${statusClass}`}>
+            ● {preorderStatus.status}
+          </span>
+        }
+      />
+
+      <div className="preorder-customer-hero">
+        <div className="customer-status-card">
+          <span className="eyebrow">STATUS PRE-ORDER SAAT INI</span>
+          <h2>
+            Status: <span className={preorderStatus.status === 'Dibuka' ? 'text-open' : preorderStatus.status === 'Belum Dibuka' ? 'text-upcoming' : 'text-closed'}>{preorderStatus.status}</span>
+          </h2>
+          <p className="status-notice-text">{preorderStatus.reason}</p>
+
+          <div className="preorder-info-grid">
+            <div className="info-tile">
+              <span className="tile-label">Mulai Pre-order</span>
+              <strong>{formatDateTimeIndo(preorderSettings.startDate, preorderSettings.startTime)}</strong>
+            </div>
+            <div className="info-tile">
+              <span className="tile-label">Penutupan Pre-order</span>
+              <strong>{formatDateTimeIndo(preorderSettings.endDate, preorderSettings.endTime)}</strong>
+            </div>
+            <div className="info-tile">
+              <span className="tile-label">Batas Kuota Maksimal</span>
+              <strong>{preorderStatus.maxQuota} Pesanan</strong>
+            </div>
+            <div className="info-tile highlight-tile">
+              <span className="tile-label">Sisa Kuota Tersedia</span>
+              <strong>{preorderStatus.remainingQuota} Pesanan</strong>
+            </div>
+          </div>
+
+          <div className="preorder-progress-wrap">
+            <div className="progress-label">
+              <small>Keterisian Kuota Produksi</small>
+              <small>{preorderStatus.currentOrders} dari {preorderStatus.maxQuota} pesanan ({preorderStatus.percentFilled}%)</small>
+            </div>
+            <div className="progress-track">
+              <div className="progress-bar" style={{ width: `${preorderStatus.percentFilled}%` }} />
+            </div>
+          </div>
+
+          <div className="preorder-action-box">
+            {preorderStatus.isOpen ? (
+              <button className="primary-button" onClick={() => onNavigate('catalog')}>
+                Pilih Produk & Pesan Pre-order Sekarang →
+              </button>
+            ) : (
+              <div className="action-disabled-wrap">
+                <span className="disabled-notice">
+                  {preorderStatus.status === 'Belum Dibuka'
+                    ? '⚠️ Pre-order belum dibuka. Anda dapat memesan produk secara reguler terlebih dahulu.'
+                    : '⚠️ Pre-order telah ditutup karena batas kuota telah tercapai atau waktu penutupan telah berakhir.'}
+                </span>
+                <button className="outline-button-sm" onClick={() => onNavigate('catalog')}>
+                  Lihat Produk Reguler →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="preorder-steps-card">
+        <h3>Langkah Pemesanan Pre-order</h3>
+        <ol className="steps-list">
+          <li><strong>Pilih varian tahu crispy</strong> favorit di katalog produk.</li>
+          <li><strong>Tentukan jumlah pesanan</strong> dan masukkan ke dalam keranjang.</li>
+          <li><strong>Buka checkout</strong> dan pilih jenis pesanan <em>Pre-order</em>.</li>
+          <li><strong>Sistem memvalidasi</strong> jadwal aktif dan kuota pre-order secara otomatis.</li>
+          <li><strong>Selesaikan pembayaran</strong> untuk mengonfirmasi slot pesanan pre-order Anda.</li>
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+function CheckoutPage({ cart, onNavigate, preorderSettings, preorderStatus, onOrderPlaced }) {
+  const [orderType, setOrderType] = useState('Reguler')
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+  const isPreorderSelected = orderType === 'Pre-order'
+  const isPreorderBlocked = isPreorderSelected && !preorderStatus.isOpen
+
+  const handleContinuePayment = () => {
+    if (isPreorderBlocked) return
+    if (isPreorderSelected && onOrderPlaced) {
+      onOrderPlaced()
+    }
+    onNavigate('payment')
+  }
 
   return (
     <section className="content-section page-section form-page">
       <SectionHeading eyebrow="Checkout" title="Informasi pembayaran" />
       <div className="checkout-list">
-        {cart.map((item) => <div className="checkout-row" key={item.id}><img src={item.image} alt="" /><span>{item.name}</span><b>{formatCurrency(item.price * item.quantity)}</b><small>{item.quantity} pesanan</small></div>)}
+        {cart.map((item) => (
+          <div className="checkout-row" key={item.id}>
+            <img src={item.image} alt="" />
+            <span>{item.name}</span>
+            <b>{formatCurrency(item.price * item.quantity)}</b>
+            <small>{item.quantity} pesanan</small>
+          </div>
+        ))}
       </div>
+
+      <Field label="Jenis Pesanan">
+        <select
+          className="field-select"
+          value={orderType}
+          onChange={(e) => setOrderType(e.target.value)}
+        >
+          <option value="Reguler">Pesanan Reguler (Pengiriman Harian Standar)</option>
+          <option value="Pre-order">Pesanan Pre-order (Jadwal & Kuota Khusus)</option>
+        </select>
+      </Field>
+
+      {isPreorderSelected && (
+        <div className={`preorder-checkout-alert ${preorderStatus.isOpen ? 'alert-info' : 'alert-danger'}`}>
+          <div className="alert-header">
+            <strong>Status Pre-order: {preorderStatus.status}</strong>
+            <span className="alert-quota">Sisa Kuota: {preorderStatus.remainingQuota} pesanan</span>
+          </div>
+          <p className="alert-body">
+            {preorderStatus.isOpen ? (
+              <>
+                Pre-order sedang dibuka sampai <strong>{formatDateTimeIndo(preorderSettings.endDate, preorderSettings.endTime)}</strong>. Kuota masih tersedia.
+              </>
+            ) : (
+              <>
+                <strong>Pesanan Pre-order Ditolak:</strong> {preorderStatus.reason}
+                {preorderStatus.status === 'Belum Dibuka' && (
+                  <span> Pre-order baru akan dibuka pada {formatDateTimeIndo(preorderSettings.startDate, preorderSettings.startTime)}.</span>
+                )}
+              </>
+            )}
+          </p>
+        </div>
+      )}
+
       <Field label="Alamat penerima"><textarea placeholder="Masukkan alamat lengkap penerima..." /></Field>
       <Field label="Pesan untuk penjual"><textarea placeholder="Tulis pesan (opsional)" /></Field>
       <div className="summary-line"><span>Total keseluruhan</span><strong>{formatCurrency(total)}</strong></div>
-      <button className="yellow-button full-button" onClick={() => onNavigate('payment')}>Lanjut Pembayaran</button>
-      <button className="dark-button full-button" onClick={() => onNavigate('cart')}>Kembali</button>
+
+      <button
+        type="button"
+        className={`full-button ${isPreorderBlocked ? 'disabled-button' : 'yellow-button'}`}
+        disabled={isPreorderBlocked}
+        onClick={handleContinuePayment}
+      >
+        {isPreorderBlocked
+          ? `Pesanan Ditolak (${preorderStatus.status})`
+          : 'Lanjut Pembayaran'}
+      </button>
+      <button type="button" className="dark-button full-button" onClick={() => onNavigate('cart')}>Kembali</button>
     </section>
   )
 }
@@ -394,7 +591,7 @@ function PaymentPage({ onNavigate }) {
   )
 }
 
-function AdminPage({ page, onNavigate }) {
+function AdminPage({ page, onNavigate, preorderSettings, preorderStatus, onSavePreorder, onResetPreorder }) {
   if (page === 'admin-variants') {
     return <AdminVariants onNavigate={onNavigate} />
   }
@@ -404,16 +601,271 @@ function AdminPage({ page, onNavigate }) {
   if (page === 'admin-report') {
     return <AdminReport onNavigate={onNavigate} />
   }
-  return <AdminDashboard onNavigate={onNavigate} />
+  if (page === 'admin-preorder') {
+    return (
+      <AdminPreorder
+        onNavigate={onNavigate}
+        settings={preorderSettings}
+        onSave={onSavePreorder}
+        onReset={onResetPreorder}
+      />
+    )
+  }
+  return <AdminDashboard onNavigate={onNavigate} preorderSettings={preorderSettings} preorderStatus={preorderStatus} />
 }
 
-function AdminDashboard({ onNavigate }) {
+function AdminDashboard({ onNavigate, preorderSettings, preorderStatus }) {
   const dates = ['27 Oktober 2026', '26 Oktober 2026', '25 Oktober 2026', '24 Oktober 2026']
+  const statusClass = preorderStatus?.status === 'Dibuka'
+    ? 'status-open'
+    : preorderStatus?.status === 'Belum Dibuka'
+      ? 'status-upcoming'
+      : 'status-closed'
+
   return (
     <section className="content-section page-section">
-      <SectionHeading eyebrow="Halaman beranda admin" title="Pencatatan keuangan" action={<button className="outline-button" onClick={() => onNavigate('admin-report')}>Cetak laporan</button>} />
-      <div className="admin-table"><div className="table-head"><b>Waktu dan tanggal</b><b>Varian</b><b>Jumlah</b><b>Total harga</b></div>{dates.map((date, index) => <div className="table-row" key={date}><span>{date}</span><span>{products[index].name}</span><span>{index + 5}</span><span>{formatCurrency((index + 5) * 5000)}</span></div>)}</div>
-      <div className="stats-grid"><div><b>Persentase penjualan</b><div className="donuts"><span className="donut original">75%</span><span className="donut crispy">25%</span></div></div><div><b>Total pesanan (belum dibuat)</b><div className="metric-list"><span>Original <strong>10</strong></span><span>Balado <strong>20</strong></span><span>Keju <strong>15</strong></span></div></div></div>
+      <SectionHeading
+        eyebrow="Halaman beranda admin"
+        title="Dashboard Pengelolaan"
+        action={<button className="outline-button" onClick={() => onNavigate('admin-report')}>Cetak laporan</button>}
+      />
+
+      {preorderSettings && preorderStatus && (
+        <div className="admin-preorder-summary-card">
+          <div className="summary-card-header">
+            <div>
+              <span className="eyebrow">KONTROL JADWAL & BATAS PRE-ORDER (K7PPL-32)</span>
+              <h3>
+                Status Saat Ini:{' '}
+                <span className={`status-pill ${statusClass}`}>
+                  ● {preorderStatus.status}
+                </span>
+              </h3>
+            </div>
+            <button className="small-button" onClick={() => onNavigate('admin-preorder')}>
+              Atur Jadwal & Kuota →
+            </button>
+          </div>
+          <p className="summary-desc">{preorderStatus.reason}</p>
+          <div className="preorder-metrics-grid">
+            <div>
+              <small>Jadwal Buka</small>
+              <b>{formatDateTimeIndo(preorderSettings.startDate, preorderSettings.startTime)}</b>
+            </div>
+            <div>
+              <small>Jadwal Tutup</small>
+              <b>{formatDateTimeIndo(preorderSettings.endDate, preorderSettings.endTime)}</b>
+            </div>
+            <div>
+              <small>Batas Maksimal Kuota</small>
+              <b>{preorderStatus.maxQuota} Pesanan</b>
+            </div>
+            <div>
+              <small>Pesanan Masuk / Sisa Kuota</small>
+              <b>{preorderStatus.currentOrders} / <span className="highlight-text">{preorderStatus.remainingQuota} sisa</span></b>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-table">
+        <div className="table-head"><b>Waktu dan tanggal</b><b>Varian</b><b>Jumlah</b><b>Total harga</b></div>
+        {dates.map((date, index) => (
+          <div className="table-row" key={date}>
+            <span>{date}</span>
+            <span>{products[index].name}</span>
+            <span>{index + 5}</span>
+            <span>{formatCurrency((index + 5) * 5000)}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="stats-grid">
+        <div>
+          <b>Persentase penjualan</b>
+          <div className="donuts">
+            <span className="donut original">75%</span>
+            <span className="donut crispy">25%</span>
+          </div>
+        </div>
+        <div>
+          <b>Total pesanan (belum dibuat)</b>
+          <div className="metric-list">
+            <span>Original <strong>10</strong></span>
+            <span>Balado <strong>20</strong></span>
+            <span>Keju <strong>15</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AdminPreorder({ onNavigate, settings, onSave, onReset }) {
+  const [form, setForm] = useState(settings)
+  const [feedback, setFeedback] = useState({ type: '', message: '' })
+  const liveStatus = useMemo(() => getPreorderStatus(form), [form])
+
+  const statusClass = liveStatus.status === 'Dibuka'
+    ? 'status-open'
+    : liveStatus.status === 'Belum Dibuka'
+      ? 'status-upcoming'
+      : 'status-closed'
+
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }))
+    setFeedback({ type: '', message: '' })
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const start = new Date(`${form.startDate}T${form.startTime || '00:00'}:00`)
+    const end = new Date(`${form.endDate}T${form.endTime || '23:59'}:00`)
+    if (end <= start) {
+      setFeedback({ type: 'error', message: 'Tanggal dan waktu penutupan harus setelah tanggal dan waktu mulai.' })
+      return
+    }
+    if (parseInt(form.maxQuota, 10) <= 0) {
+      setFeedback({ type: 'error', message: 'Batas maksimal pesanan harus lebih besar dari 0.' })
+      return
+    }
+    onSave(form)
+    setFeedback({ type: 'success', message: 'Pengaturan jadwal dan batas kuota pre-order berhasil disimpan dan diterapkan ke sistem!' })
+  }
+
+  const handleResetClick = () => {
+    onReset()
+    setForm(initialPreorderSettings)
+    setFeedback({ type: 'success', message: 'Pengaturan berhasil direset ke konfigurasi default.' })
+  }
+
+  return (
+    <section className="content-section page-section form-page">
+      <button className="back-button" onClick={() => onNavigate('admin-dashboard')}>← Kembali ke Dashboard</button>
+      <SectionHeading
+        eyebrow="MANAJEMEN PRE-ORDER (K7PPL-32)"
+        title="Pengaturan Jadwal & Batas Pre-order"
+        description="Atur tanggal dan waktu pembukaan, penutupan, serta batas maksimal kuota pesanan pre-order Tahu Kriuk."
+      />
+
+      <div className="preorder-preview-panel">
+        <div className="preview-top">
+          <div>
+            <span className="eyebrow">STATUS PRE-ORDER REAL-TIME</span>
+            <div className="status-display-line">
+              <span className={`status-badge-lg ${statusClass}`}>
+                ● {liveStatus.status}
+              </span>
+              <span className="status-caption">{liveStatus.reason}</span>
+            </div>
+          </div>
+          <div className="quota-pill-box">
+            <span>Sisa Kuota: <strong>{liveStatus.remainingQuota}</strong> dari {liveStatus.maxQuota} pesanan</span>
+            <div className="progress-track">
+              <div className="progress-bar" style={{ width: `${liveStatus.percentFilled}%` }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="preview-dates-row">
+          <div>
+            <small>Waktu Mulai</small>
+            <strong>{formatDateTimeIndo(form.startDate, form.startTime)}</strong>
+          </div>
+          <div>
+            <small>Waktu Penutupan</small>
+            <strong>{formatDateTimeIndo(form.endDate, form.endTime)}</strong>
+          </div>
+          <div>
+            <small>Pesanan Masuk</small>
+            <strong>{form.currentOrders} pesanan ({liveStatus.percentFilled}%)</strong>
+          </div>
+        </div>
+      </div>
+
+      {feedback.message && (
+        <div className={feedback.type === 'error' ? 'field-error auth-feedback error-banner' : 'auth-success success-banner'} role="alert">
+          {feedback.message}
+        </div>
+      )}
+
+      <form className="preorder-form" onSubmit={handleSubmit}>
+        <div className="form-grid-2">
+          <Field label="Tanggal Mulai Pre-order">
+            <input
+              type="date"
+              required
+              value={form.startDate}
+              onChange={(e) => handleChange('startDate', e.target.value)}
+            />
+          </Field>
+          <Field label="Waktu Mulai Pre-order">
+            <input
+              type="time"
+              required
+              value={form.startTime}
+              onChange={(e) => handleChange('startTime', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="form-grid-2">
+          <Field label="Tanggal Penutupan Pre-order">
+            <input
+              type="date"
+              required
+              value={form.endDate}
+              onChange={(e) => handleChange('endDate', e.target.value)}
+            />
+          </Field>
+          <Field label="Waktu Penutupan Pre-order">
+            <input
+              type="time"
+              required
+              value={form.endTime}
+              onChange={(e) => handleChange('endTime', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="form-grid-2">
+          <Field label="Batas Maksimal Jumlah Pesanan (Kuota)">
+            <input
+              type="number"
+              min="1"
+              required
+              value={form.maxQuota}
+              onChange={(e) => handleChange('maxQuota', e.target.value)}
+            />
+          </Field>
+          <Field label="Pesanan Pre-order Terkumpul Saat Ini">
+            <input
+              type="number"
+              min="0"
+              required
+              value={form.currentOrders}
+              onChange={(e) => handleChange('currentOrders', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <Field label="Keterangan / Catatan Tambahan Pre-order">
+          <textarea
+            value={form.description}
+            onChange={(e) => handleChange('description', e.target.value)}
+            placeholder="Tuliskan catatan informasi untuk pelanggan..."
+          />
+        </Field>
+
+        <div className="form-actions-row">
+          <button type="submit" className="primary-button">
+            Simpan Pengaturan Pre-order
+          </button>
+          <button type="button" className="outline-button-sm" onClick={handleResetClick}>
+            Reset ke Default
+          </button>
+        </div>
+      </form>
     </section>
   )
 }
@@ -549,7 +1001,26 @@ function AdminLoginPage({ onSuccess, onNavigate }) {
 }
 
 function Footer({ onNavigate }) {
-  return <footer className="footer"><div><b className="footer-brand">✦ Tahu Kriuk</b><p>Menyediakan produk tahu berkualitas, segar, dan lezat untuk keluarga Indonesia.</p></div><div><b>Navigasi</b><button onClick={() => onNavigate('home')}>Beranda</button><button onClick={() => onNavigate('catalog')}>Produk</button></div><div><b>Informasi</b><span>Bahan berkualitas</span><span>Fresh setiap hari</span><button className="admin-link" onClick={() => onNavigate('admin-login')}>Login Admin</button></div></footer>
+  return (
+    <footer className="footer">
+      <div>
+        <b className="footer-brand">✦ Tahu Kriuk</b>
+        <p>Menyediakan produk tahu berkualitas, segar, dan lezat untuk keluarga Indonesia.</p>
+      </div>
+      <div>
+        <b>Navigasi</b>
+        <button onClick={() => onNavigate('home')}>Beranda</button>
+        <button onClick={() => onNavigate('catalog')}>Produk</button>
+        <button onClick={() => onNavigate('preorder')}>Pre-order</button>
+      </div>
+      <div>
+        <b>Informasi</b>
+        <span>Bahan berkualitas</span>
+        <span>Fresh setiap hari</span>
+        <button className="admin-link" onClick={() => onNavigate('admin-login')}>Login Admin</button>
+      </div>
+    </footer>
+  )
 }
 
 function App() {
@@ -557,9 +1028,33 @@ function App() {
   const [cart, setCart] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [preorderSettings, setPreorderSettings] = useState(loadPreorderSettings)
+  const preorderStatus = useMemo(() => getPreorderStatus(preorderSettings), [preorderSettings])
+
   const selectedProduct = typeof page === 'object' ? products.find((product) => product.id === page.productId) : null
   const currentPage = typeof page === 'object' ? 'detail' : page
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0)
+
+  const handleSavePreorder = (newSettings) => {
+    setPreorderSettings(newSettings)
+    savePreorderSettings(newSettings)
+  }
+
+  const handleResetPreorder = () => {
+    setPreorderSettings(initialPreorderSettings)
+    savePreorderSettings(initialPreorderSettings)
+  }
+
+  const handlePreorderPlaced = () => {
+    setPreorderSettings((prev) => {
+      const updated = {
+        ...prev,
+        currentOrders: (parseInt(prev.currentOrders, 10) || 0) + 1,
+      }
+      savePreorderSettings(updated)
+      return updated
+    })
+  }
 
   const addToCart = (product) => {
     if (!isLoggedIn) {
@@ -582,13 +1077,14 @@ function App() {
 
   let content
   if (currentPage === 'admin-login') content = <AdminLoginPage onSuccess={() => { setIsAdmin(true); setIsLoggedIn(false); navigate('admin-dashboard') }} onNavigate={navigate} />
-  else if (isAdmin) content = <AdminPage page={currentPage} onNavigate={navigate} />
+  else if (isAdmin) content = <AdminPage page={currentPage} onNavigate={navigate} preorderSettings={preorderSettings} preorderStatus={preorderStatus} onSavePreorder={handleSavePreorder} onResetPreorder={handleResetPreorder} />
   else if (currentPage === 'login' || currentPage === 'register') content = <AuthPage mode={currentPage} onNavigate={navigate} onSuccess={() => { setIsLoggedIn(true); navigate('home') }} onAdminLogin={() => { setIsAdmin(true); setIsLoggedIn(false); navigate('admin-dashboard') }} />
-  else if (currentPage === 'home') content = <HomePage onNavigate={navigate} onAdd={addToCart} onOpen={openProduct} />
+  else if (currentPage === 'home') content = <HomePage onNavigate={navigate} onAdd={addToCart} onOpen={openProduct} preorderSettings={preorderSettings} preorderStatus={preorderStatus} />
   else if (currentPage === 'catalog') content = <CatalogPage onAdd={addToCart} onOpen={openProduct} />
+  else if (currentPage === 'preorder') content = <PreorderPage onNavigate={navigate} preorderSettings={preorderSettings} preorderStatus={preorderStatus} />
   else if (currentPage === 'detail') content = <ProductDetail product={selectedProduct || products[0]} onAdd={addToCart} onNavigate={navigate} />
   else if (currentPage === 'cart') content = <CartPage cart={cart} onUpdate={updateQuantity} onRemove={removeFromCart} onNavigate={navigate} />
-  else if (currentPage === 'checkout') content = <CheckoutPage cart={cart} onNavigate={navigate} />
+  else if (currentPage === 'checkout') content = <CheckoutPage cart={cart} onNavigate={navigate} preorderSettings={preorderSettings} preorderStatus={preorderStatus} onOrderPlaced={handlePreorderPlaced} />
   else content = <PaymentPage onNavigate={navigate} />
 
   const toggleRole = () => {
@@ -602,7 +1098,21 @@ function App() {
     navigate('home')
   }
 
-  return <div className="app-shell"><Header page={currentPage} isAdmin={isAdmin} isLoggedIn={isLoggedIn} cartCount={cartCount} onNavigate={navigate} onLogout={logout} onToggleRole={toggleRole} /><main>{content}</main>{!isAdmin && !['login', 'register', 'admin-login'].includes(currentPage) && <Footer onNavigate={navigate} />}</div>
+  return (
+    <div className="app-shell">
+      <Header
+        page={currentPage}
+        isAdmin={isAdmin}
+        isLoggedIn={isLoggedIn}
+        cartCount={cartCount}
+        onNavigate={navigate}
+        onLogout={logout}
+        onToggleRole={toggleRole}
+      />
+      <main>{content}</main>
+      {!isAdmin && !['login', 'register', 'admin-login'].includes(currentPage) && <Footer onNavigate={navigate} />}
+    </div>
+  )
 }
 
 export default App

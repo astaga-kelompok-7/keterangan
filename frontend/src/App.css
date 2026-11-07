@@ -638,6 +638,456 @@ textarea:focus-visible {
   margin: 20px auto 0;
 }
 
+/* ==========================================================================
+   PRE-ORDER STYLES (K7PPL-32)
+   ========================================================================== */
+
+/* Status Pills & Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.status-badge-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+.status-open {
+  background: #e2f5e5;
+  color: #1e6b2c;
+  border: 1px solid #b5e6bc;
+}
+
+.status-upcoming {
+  background: #fff3d4;
+  color: #945e05;
+  border: 1px solid #f6db95;
+}
+
+.status-closed {
+  background: #fde6e6;
+  color: #9e2323;
+  border: 1px solid #f8c2c2;
+}
+
+.text-open { color: #1e6b2c; }
+.text-upcoming { color: #945e05; }
+.text-closed { color: #9e2323; }
+
+/* Pre-order Home Banner */
+.preorder-home-banner-wrapper {
+  width: min(90%, 1120px);
+  margin: 35px auto 0;
+}
+
+.preorder-home-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fffcf5, #fffaea);
+  box-shadow: 0 4px 18px rgba(37, 22, 8, .05);
+}
+
+.preorder-home-banner h3 {
+  margin: 6px 0 4px;
+  font-family: Poppins, sans-serif;
+  font-size: 19px;
+  color: var(--brown);
+}
+
+.preorder-home-banner p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.banner-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.banner-action-row {
+  margin-top: 10px;
+}
+
+/* Customer Pre-order Page */
+.preorder-customer-hero {
+  margin-bottom: 35px;
+}
+
+.customer-status-card {
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.customer-status-card h2 {
+  margin: 8px 0 4px;
+  font-family: Poppins, sans-serif;
+  font-size: 26px;
+}
+
+.status-notice-text {
+  margin: 0 0 24px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.preorder-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 24px;
+}
+
+.info-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf9;
+}
+
+.highlight-tile {
+  background: #fff9e6;
+  border-color: #ffd875;
+}
+
+.tile-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+}
+
+.info-tile strong {
+  font-size: 14px;
+  color: var(--brown);
+}
+
+.highlight-tile strong {
+  color: #ad7409;
+  font-size: 16px;
+}
+
+.preorder-progress-wrap {
+  margin-bottom: 26px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.progress-track {
+  width: 100%;
+  height: 9px;
+  border-radius: 6px;
+  background: #ebdcc2;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--yellow), #ff9900);
+  transition: width .4s ease;
+}
+
+.preorder-action-box {
+  padding-top: 10px;
+}
+
+.action-disabled-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  background: #fdf5e6;
+  border: 1px solid #fae3b4;
+}
+
+.disabled-notice {
+  font-size: 12px;
+  color: #8c5b05;
+  font-weight: 600;
+}
+
+.preorder-steps-card {
+  padding: 28px 30px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.preorder-steps-card h3 {
+  margin: 0 0 16px;
+  font-family: Poppins, sans-serif;
+  font-size: 18px;
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.steps-list strong {
+  color: var(--brown);
+}
+
+/* Checkout Pre-order Alert */
+.field-select {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #d6c6a9;
+  border-radius: 6px;
+  background: rgba(255, 253, 248, .9);
+  color: var(--brown);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.preorder-checkout-alert {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.preorder-checkout-alert .alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.preorder-checkout-alert .alert-quota {
+  font-weight: 700;
+}
+
+.preorder-checkout-alert .alert-body {
+  margin: 0;
+}
+
+.alert-info {
+  background: #eef8ee;
+  border: 1px solid #bce4bf;
+  color: #1a5e26;
+}
+
+.alert-danger {
+  background: #fdf0f0;
+  border: 1px solid #f8c4c4;
+  color: #991f1f;
+}
+
+.disabled-button {
+  background: #c7beaf;
+  color: #635b50;
+  cursor: not-allowed;
+  opacity: .85;
+}
+
+/* Admin Pre-order Styles */
+.admin-preorder-summary-card {
+  margin-bottom: 30px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgba(37, 22, 8, .04);
+}
+
+.summary-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.summary-card-header h3 {
+  margin: 4px 0 0;
+  font-family: Poppins, sans-serif;
+  font-size: 18px;
+}
+
+.summary-desc {
+  margin: 0 0 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.preorder-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+.preorder-metrics-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preorder-metrics-grid small {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.preorder-metrics-grid b {
+  font-size: 12.5px;
+  color: var(--brown);
+}
+
+.highlight-text {
+  color: #ad7409;
+}
+
+/* Admin Preorder Form Page */
+.preorder-preview-panel {
+  margin-bottom: 24px;
+  padding: 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px rgba(37, 22, 8, .04);
+}
+
+.preview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.status-display-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.status-caption {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.quota-pill-box {
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.preview-dates-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+.preview-dates-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-dates-row small {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.preview-dates-row strong {
+  font-size: 12px;
+  color: var(--brown);
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.error-banner {
+  padding: 10px 14px;
+  background: #ffe3e3;
+  border: 1px solid #f6b5b5;
+  border-radius: 6px;
+  color: #9c1f1f;
+  font-size: 11.5px;
+  margin-bottom: 16px;
+}
+
+.success-banner {
+  padding: 10px 14px;
+  background: #e4f7e6;
+  border: 1px solid #b3e7b9;
+  border-radius: 6px;
+  color: #1b6327;
+  font-size: 11.5px;
+  margin-bottom: 16px;
+}
+
 @media (max-width: 760px) {
   .topbar {
     display: flex;
@@ -660,6 +1110,9 @@ textarea:focus-visible {
   .auth-panel { padding: 30px 24px; }
   .cart-row { grid-template-columns: 20px 55px 1fr 80px; }
   .cart-row .remove-button { grid-column: 3 / -1; text-align: left; }
+  .preorder-info-grid, .preorder-metrics-grid, .preview-dates-row { grid-template-columns: 1fr 1fr; }
+  .preview-top { flex-direction: column; align-items: flex-start; }
+  .quota-pill-box { width: 100%; min-width: 0; }
 }
 
 @media (max-width: 600px) {
@@ -669,6 +1122,15 @@ textarea:focus-visible {
   }
   .product-image {
     height: 210px;
+  }
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .preorder-info-grid, .preorder-metrics-grid, .preview-dates-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -683,5 +1145,11 @@ textarea:focus-visible {
   .product-card-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+  .preorder-home-banner {
+    padding: 18px 20px;
+  }
+  .customer-status-card {
+    padding: 20px 16px;
   }
 }
