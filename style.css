@@ -173,6 +173,43 @@ textarea {
     border-radius: 7px;
 }
 
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+    align-items: end;
+    gap: 10px 16px;
+    padding: 18px;
+    background: white;
+    border-radius: 12px;
+}
+
+.filter-form label {
+    margin: 0;
+}
+
+.filter-form input,
+.filter-form button,
+.filter-form .button {
+    margin: 0;
+}
+
+.secondary-button {
+    background: #6b625b;
+    text-align: center;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin: 24px 0;
+}
+
+.summary-grid .card strong {
+    color: #a64b13;
+    font-size: 24px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -209,5 +246,10 @@ footer {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
+    }
+
+    .filter-form,
+    .summary-grid {
+        grid-template-columns: 1fr;
     }
 }
