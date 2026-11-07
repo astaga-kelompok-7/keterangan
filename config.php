@@ -7,10 +7,6 @@ define('DB_NAME', 'toko_tahu_krispy');
 define('DB_USER', 'root');
 define('DB_PASS', ''); // sesuaikan jika MySQL Anda memakai password
 
-// Ongkir untuk area Telang gratis. Tarif area Bangkalan lain bisa diubah di sini.
-define('SHIPPING_TELANG', 0);
-define('SHIPPING_BANGKALAN_OTHER', 5000);
-
 function db(): PDO {
     static $pdo = null;
     if ($pdo instanceof PDO) return $pdo;
