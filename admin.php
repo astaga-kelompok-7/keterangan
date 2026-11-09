@@ -46,6 +46,7 @@ $data = mysqli_query($conn, $sql);
     <a class="logo" href="admin.php">🥡 Admin Tahu Kriuk</a>
     <nav>
         <a href="admin.php">Pesanan</a>
+        <a href="admin_rekap_preorder.php">Rekap Pre-order</a>
         <a href="admin_produk.php">Kelola Produk</a>
         <a href="admin_wilayah.php">Wilayah & Tarif</a>
         <a href="produk.php">Lihat Produk</a>
