@@ -5,3 +5,5 @@ Selesai:
 - 1.1.2.1 - Mendesain formulir pemesanan
 - 1.2.1.1 - Mendesain daftar dan detail pesanan
 - 1.2.3.1 - Mendesain pencatatan pesanan saat ini dan kapasitas maksimum (updated)
+- 1.3.3.1 - Mendesain konfirmasi pesanan dan status
+- 1.4.1.1 - Mendesain formulir transaksi keuangan
